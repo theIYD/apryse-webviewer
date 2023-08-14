@@ -1,68 +1,52 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import WebViewer from '@pdftron/webviewer';
 
 export const useSignatureWebViewer = () => {
     const viewer = useRef(null)
     const [webViewer, setWebViewer] = useState();
 
-    useEffect(() => {
-        if (!webViewer) {
-			return;
-		}
-		const { documentViewer } = webViewer.Core;
+    const initializeWebViewer = async () => {
+      if(viewer.current && !webViewer) {
+        const instance = await WebViewer(
+            {
+              path: '/webviewer/lib',
+              initialDoc: '/files/sample.pdf',
+              licenseKey: ''  // sign up to get a free trial key at https://dev.apryse.com
+            },
+            viewer.current,
+          );
+        setWebViewer(instance);
 
-        documentViewer.addEventListener("documentLoaded", onDocumentLoaded);
-    }, [webViewer])
+        const { annotationManager, Annotations } = instance.Core;
+        const { WidgetFlags } = Annotations;
 
-    const initializeWebViewer = async (pdfUrl) => {
-              if(viewer.current && !webViewer) {
-            const instance = await WebViewer(
-                {
-                  path: '/webviewer/lib',
-                  initialDoc: '',
-                  licenseKey: ''  // sign up to get a free trial key at https://dev.apryse.com
-                },
-                viewer.current,
-              );
-            setWebViewer(instance);
-          }
+        // set flags for multiline and required
+        const flags = new WidgetFlags();
+        flags.set('Multiline', true);
+        flags.set('Required', true);
 
-          if(pdfUrl && pdfUrl.length > 0) {
-            webViewer.UI.loadDocument(pdfUrl);
-          }
-        
-    }
+        // create a form field
+        const field = new Annotations.Forms.Field("some text field name", {
+          type: 'Tx',
+          defaultValue: "some placeholder default text value",
+          flags,
+        });
 
-    const performTextSearch = async () => {
-		if (!webViewer.Core) {
-			return;
-		}
+        // create a widget annotation
+        const widgetAnnot = new Annotations.TextWidgetAnnotation(field);
 
-		const { Search, documentViewer } = webViewer.Core;
+        // set position and size
+        widgetAnnot.PageNumber = 1;
+        widgetAnnot.X = 100;
+        widgetAnnot.Y = 100;
+        widgetAnnot.Width = 150;
+        widgetAnnot.Height = 20;
 
-		const searchRegex = "\\[\\[(?:\\s*([a-zA-Z])\\s*\\|\\s*([-]?\\d)\\s*)+\\]\\]|\\[\\[(\\w)\\|(([-]?\\d))\\|([^|\\]]+)(?:\\|([^|\\]]+))?(\\|([^|\\]]+)(?:\\|([^|\\]]+))?)*]\\]";
-		const mode =
-			Search.Mode.PAGE_STOP | Search.Mode.HIGHLIGHT | Search.Mode.REGEX;
-		documentViewer.textSearchInit(searchRegex, mode, {
-			fullSearch: true,
-			onError: error => {
-				console.error(error);
-			},
-			// The callback function that is called when the search returns a result.
-			onResult: result => {
-                console.log("result", result);
-            }
-		});
-	};
-
-    const onDocumentLoaded = async () => {
-        console.info("DOCUMENT LOADED");
-
-        const { PDFNet } = webViewer.Core;
-        await PDFNet.initialize();
-
-        await performTextSearch();
-        
+        //add the form field and widget annotation
+        annotationManager.getFieldManager().addField(field);
+        annotationManager.addAnnotation(widgetAnnot);
+        annotationManager.drawAnnotationsFromList([widgetAnnot]);
+      }
     }
 
     return {
