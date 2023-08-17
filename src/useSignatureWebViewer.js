@@ -11,7 +11,7 @@ export const useSignatureWebViewer = () => {
             {
               path: '/webviewer/lib',
               initialDoc: '/files/sample.pdf',
-              licenseKey: ''  // sign up to get a free trial key at https://dev.apryse.com
+              licenseKey: 'demo:1688980534792:7c60a78b03000000001da33a1a245b69027dfbfba34d81e76179f3d122'  // sign up to get a free trial key at https://dev.apryse.com
             },
             viewer.current,
           );
