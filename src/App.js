@@ -6,7 +6,7 @@ const App = () => {
   return (
     <div className="App">
       <div className="header">React sample</div>
-      <SignatureWebViewer />
+      {<SignatureWebViewer />}
     </div>
   );
 };

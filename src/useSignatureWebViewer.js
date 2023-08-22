@@ -17,6 +17,8 @@ export const useSignatureWebViewer = () => {
           );
         setWebViewer(instance);
 
+        instance.UI.disableTools(); // hides DOM element + disables shortcut
+
         const { annotationManager, Annotations } = instance.Core;
         const { WidgetFlags } = Annotations;
 
